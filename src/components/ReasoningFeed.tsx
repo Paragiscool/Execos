@@ -1,63 +1,73 @@
-"use client";
-
-import { Brain, Activity, ShieldAlert, GitCommit } from "lucide-react";
-
-const feedItems = [
-  {
-    type: "intent",
-    icon: <Brain size={16} className="text-purple-400" />,
-    title: "Intent Engine",
-    message: "Inferred intent: 'Prepare for Finals' based on user chaos input.",
-    time: "2 mins ago"
-  },
-  {
-    type: "simulate",
-    icon: <Activity size={16} className="text-yellow-400" />,
-    title: "Execution Simulator",
-    message: "Evaluated 3 schedule permutations. Selected Plan B (Utility Score: 93).",
-    time: "1 min ago"
-  },
-  {
-    type: "policy",
-    icon: <ShieldAlert size={16} className="text-green-400" />,
-    title: "Policy Engine",
-    message: "Constraint verified: No events scheduled past midnight. Cleared for execution.",
-    time: "45 sec ago"
-  },
-  {
-    type: "decision",
-    icon: <GitCommit size={16} className="text-blue-400" />,
-    title: "Decision Journal #42",
-    message: "Moved 'Assignment A' to 1:00 PM.",
-    reasoning: "High execution readiness. Clears time debt before 4 PM deadline.",
-    confidence: "94% (Completed similar tasks 12 times)",
-    time: "Just now",
-    highlight: true
-  }
-];
+'use client';
+import React, { useState } from 'react';
+import LiveAgentStatus from './LiveAgentStatus';
+import { useMission } from './MissionProvider';
 
 export default function ReasoningFeed() {
+  const { ledger, currentIndex } = useMission();
+  const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
+
+  // Get active events up to current index
+  const activeEvents = ledger.slice(0, currentIndex + 1);
+
   return (
-    <div className="flex flex-col gap-4">
-      {feedItems.map((item, i) => (
-        <div key={i} className={`p-4 rounded-lg border ${
-          item.highlight ? 'border-blue-500/50 bg-blue-500/10' : 'border-white/5 bg-white/5'
-        }`}>
-          <div className="flex items-center gap-2 mb-2">
-            {item.icon}
-            <span className="text-sm font-medium text-gray-200">{item.title}</span>
-            <span className="text-xs text-gray-500 ml-auto">{item.time}</span>
-          </div>
-          <p className="text-sm text-gray-300 mb-2">{item.message}</p>
-          
-          {item.reasoning && (
-            <div className="mt-3 pt-3 border-t border-white/10 text-xs flex flex-col gap-1">
-              <div className="flex text-gray-400"><span className="w-20 font-medium">Reasoning:</span> <span className="text-gray-300">{item.reasoning}</span></div>
-              <div className="flex text-gray-400"><span className="w-20 font-medium">Confidence:</span> <span className="text-blue-400">{item.confidence}</span></div>
-            </div>
+    <div className="flex flex-col h-full p-6 pb-24">
+      
+      {/* Top: Live Agent Status */}
+      <LiveAgentStatus />
+
+      {/* Middle: Event Timeline */}
+      <div className="flex-1 overflow-y-auto mt-4 mb-6 pr-4">
+        <h2 className="text-gray-400 text-sm font-semibold uppercase tracking-wider mb-4">Event Ledger</h2>
+        <div className="space-y-2 font-mono text-sm">
+          {activeEvents.length === 0 && (
+            <div className="text-gray-500 italic p-2">Waiting for mission to start...</div>
           )}
+          {activeEvents.map((evt) => (
+            <div 
+              key={evt.id} 
+              onClick={() => setSelectedEvent(evt.id)}
+              className={`flex items-center gap-4 p-2 rounded cursor-pointer transition-colors ${selectedEvent === evt.id ? 'bg-blue-900/30 border border-blue-800' : 'hover:bg-gray-800'}`}
+            >
+              <span className="text-gray-500 min-w-[130px] truncate text-xs">{evt.eventType}</span>
+              <span className="text-green-500 font-bold shrink-0">✓</span>
+              <span className={`truncate ${selectedEvent === evt.id ? 'text-blue-400 font-bold' : 'text-gray-300'}`}>{evt.outcome}</span>
+            </div>
+          ))}
         </div>
-      ))}
+      </div>
+
+      {/* Bottom: Explainability Panel */}
+      {selectedEvent && (() => {
+        const evt = ledger.find(e => e.id === selectedEvent);
+        if (!evt) return null;
+        return (
+          <div className="bg-black border border-gray-700 rounded-xl p-5 shadow-2xl relative shrink-0 mb-16 overflow-y-auto max-h-64">
+            <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+            <h2 className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-4">Explainability Inspector</h2>
+            
+            <div className="grid grid-cols-2 gap-x-8 gap-y-4 text-sm font-mono">
+              <div>
+                <span className="text-gray-500 block text-xs mb-1">Decision / Event</span>
+                <span className="text-white">{evt.eventType}</span>
+              </div>
+              <div>
+                <span className="text-gray-500 block text-xs mb-1">Confidence</span>
+                <span className="text-green-400 font-bold">{evt.confidence}%</span>
+              </div>
+              <div className="col-span-2">
+                <span className="text-gray-500 block text-xs mb-1">Reasoning</span>
+                <span className="text-gray-300">{evt.reason}</span>
+              </div>
+              <div>
+                <span className="text-gray-500 block text-xs mb-1">Origin Agent</span>
+                <span className="text-blue-400">{evt.agent}</span>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
     </div>
   );
 }

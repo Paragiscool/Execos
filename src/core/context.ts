@@ -29,8 +29,33 @@ export interface ExecutionContext {
   digitalTwin: BehavioralProfile;
   worldState: WorldState;
   ledger: LedgerEntry[];
+  readinessScore: number; // 0-100, drives the animated readiness gauge
+  worldLog: string[];     // Human-readable log of what happened
 }
 
+// Default state used by the Replay Engine to reconstruct from scratch
+export const defaultContext: ExecutionContext = {
+  missionId: '',
+  currentTime: new Date().toISOString(),
+  goals: new Map(),
+  tasks: new Map(),
+  calendar: [],
+  user: { id: 'u_1', name: 'Demo User' },
+  digitalTwin: {
+    startDelayMins: 20,
+    maxFocusDurationMins: 90,
+    procrastinationRisk: 40
+  },
+  worldState: {
+    currentTime: new Date().toISOString(),
+    environment: 'Finals Week'
+  },
+  ledger: [],
+  readinessScore: 43,
+  worldLog: []
+};
+
+// Live global context (the single source of truth during execution)
 export const globalContext: ExecutionContext = {
   missionId: 'm_graduate_finals',
   currentTime: new Date().toISOString(),
@@ -47,5 +72,7 @@ export const globalContext: ExecutionContext = {
     currentTime: new Date().toISOString(),
     environment: 'Finals Week'
   },
-  ledger: []
+  ledger: [],
+  readinessScore: 43,
+  worldLog: []
 };

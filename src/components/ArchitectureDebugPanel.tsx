@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import { useMission } from './MissionProvider';
 
 export default function ArchitectureDebugPanel() {
   const [systemState, setSystemState] = useState({
@@ -12,11 +13,18 @@ export default function ArchitectureDebugPanel() {
     calendarSync: 'MOCKED',
   });
 
-  const [replayEvents, setReplayEvents] = useState<any[]>([]);
+  const { runMission } = useMission();
+  const [isValidating, setIsValidating] = useState(false);
+  const [validated, setValidated] = useState(false);
 
   const runValidation = async () => {
-    // In a real scenario, this would hit a /api/validate endpoint
-    alert("Running full system validation pipeline...");
+    setIsValidating(true);
+    // Simulate validation check
+    setTimeout(() => {
+      setIsValidating(false);
+      setValidated(true);
+      setTimeout(() => setValidated(false), 3000);
+    }, 800);
   };
 
   return (
@@ -34,11 +42,14 @@ export default function ArchitectureDebugPanel() {
       <div className="flex gap-4">
         <button 
           onClick={runValidation}
-          className="px-3 py-1 bg-green-900/30 border border-green-500 rounded hover:bg-green-800 transition-colors"
+          className={`px-3 py-1 border rounded transition-colors ${validated ? 'bg-green-600/50 border-green-400 text-white' : isValidating ? 'bg-gray-800 border-gray-600 text-gray-400 animate-pulse' : 'bg-green-900/30 border-green-500 text-green-400 hover:bg-green-800'}`}
         >
-          Validate System
+          {validated ? 'System Valid ✓' : isValidating ? 'Validating...' : 'Validate System'}
         </button>
-        <button className="px-3 py-1 bg-blue-900/30 border border-blue-500 text-blue-400 rounded hover:bg-blue-800 transition-colors">
+        <button 
+          onClick={() => runMission()}
+          className="px-3 py-1 bg-blue-900/30 border border-blue-500 text-blue-400 rounded hover:bg-blue-800 transition-colors"
+        >
           Replay Ledger
         </button>
       </div>

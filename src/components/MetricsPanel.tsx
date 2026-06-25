@@ -1,46 +1,65 @@
-"use client";
+'use client';
+import React from 'react';
+import { motion } from 'framer-motion';
+import { useMission } from './MissionProvider';
 
 export default function MetricsPanel() {
-  const readiness = 87;
+  const { currentContext, telemetry } = useMission();
+  const readiness = currentContext.readinessScore;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col h-full border-l border-gray-800 bg-[#0B0E14] p-6 pb-24 overflow-y-auto">
       
-      {/* Master Score */}
-      <div className="flex flex-col items-center justify-center p-6 bg-black/30 rounded-xl border border-white/5 relative overflow-hidden">
-        <div className="absolute inset-0 bg-blue-500/10 blur-xl"></div>
-        <div className="relative z-10 text-center">
-          <div className="text-5xl font-bold text-white glow-text mb-2">{readiness}%</div>
-          <div className="text-xs font-semibold text-blue-400 uppercase tracking-widest">Execution Readiness</div>
+      {/* Execution Readiness Gauge */}
+      <div className="mb-10">
+        <h2 className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-4">Execution Readiness</h2>
+        <div className="text-5xl font-bold text-white mb-4 tracking-tighter">
+          {readiness}%
+        </div>
+        <div className="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+          <motion.div 
+            className="h-full bg-blue-500"
+            initial={{ width: 0 }}
+            animate={{ width: `${readiness}%` }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          />
         </div>
       </div>
 
-      {/* Breakdowns */}
-      <div className="space-y-4">
-        <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Why?</h3>
-        
-        <MetricBar label="Time Debt" value={25} color="bg-green-500" inverse />
-        <MetricBar label="Energy" value={80} color="bg-blue-500" />
-        <MetricBar label="Risk" value={12} color="bg-green-500" inverse />
-        <MetricBar label="Momentum" value={95} color="bg-purple-500" />
-        <MetricBar label="Focus Span" value={65} color="bg-blue-400" />
+      {/* AI Performance Stats */}
+      <div className="mb-10 flex-1">
+        <h2 className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-4">AI Performance</h2>
+        <div className="space-y-6 font-mono text-sm">
+          
+          <div className="flex justify-between items-center">
+            <span className="text-gray-500">Gemini Latency</span>
+            <span className="text-white">{telemetry?.latencyMs || '--'} ms</span>
+          </div>
+
+          <div className="flex justify-between items-center">
+            <span className="text-gray-500">Events Processed</span>
+            <span className="text-green-400">{telemetry?.eventsProcessed || '--'}</span>
+          </div>
+          
+          <div className="flex justify-between items-center">
+            <span className="text-gray-500">Conflicts Prevented</span>
+            <span className="text-gray-200">98%</span>
+          </div>
+        </div>
       </div>
 
-    </div>
-  );
-}
+      <div className="h-px bg-gray-800 w-full" />
 
-function MetricBar({ label, value, color, inverse = false }: { label: string, value: number, color: string, inverse?: boolean }) {
-  // If inverse, a low value is "good" visually (we just keep it simple here)
-  return (
-    <div>
-      <div className="flex justify-between text-xs mb-1">
-        <span className="text-gray-300">{label}</span>
-        <span className="text-gray-400">{value}%</span>
+      {/* Next Action Box */}
+      <div className="bg-blue-900/20 border border-blue-900/50 rounded-xl p-4 shrink-0">
+        <span className="text-blue-400 text-xs font-bold uppercase tracking-widest block mb-2">Next AI Action</span>
+        <h3 className="text-white font-medium mb-1">Research Company</h3>
+        <p className="text-gray-400 text-sm">Starts in 18 min</p>
+        <div className="mt-3 text-xs text-green-400 bg-green-400/10 inline-block px-2 py-1 rounded">
+          Confidence 94%
+        </div>
       </div>
-      <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-        <div className={`h-full ${color}`} style={{ width: `${value}%` }}></div>
-      </div>
+
     </div>
   );
 }

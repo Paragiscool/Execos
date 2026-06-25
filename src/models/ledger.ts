@@ -40,4 +40,5 @@ export interface LedgerEntry {
   taskId?: string;
   previousState?: ExecutionState;
   nextState?: ExecutionState;
+  payload?: any; // Generic payload for tasks, goals, etc.
 }
