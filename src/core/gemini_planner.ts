@@ -18,11 +18,16 @@ const plannerSchema: Schema = {
       items: {
         type: Type.OBJECT,
         properties: {
+          id: { type: Type.STRING },
           title: { type: Type.STRING },
           estimatedDurationMins: { type: Type.INTEGER },
-          priority: { type: Type.INTEGER }
+          priority: { type: Type.INTEGER },
+          dependencies: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING }
+          }
         },
-        required: ["title", "estimatedDurationMins", "priority"]
+        required: ["id", "title", "estimatedDurationMins", "priority"]
       }
     }
   },
@@ -77,6 +82,9 @@ export class GeminiPlanner implements IPlanner {
          throw new Error("MALFORMED_JSON_RESPONSE");
       }
 
+      // Deterministic Backend DAG Validation
+      this.validateGoalGraph(plan.tasks);
+
       // Log AI Performance Metrics to Ledger
       await bus.publish({
         id: `evt_${Date.now()}`,
@@ -86,7 +94,7 @@ export class GeminiPlanner implements IPlanner {
           ...plan,
           _aiMetrics: {
             model: 'gemini-2.5-flash',
-            promptVersion: 'planner_prompt_v1.ts',
+            promptVersion: 'planner_prompt_v2.ts',
             latencyMs: latency
           }
         }
@@ -97,6 +105,50 @@ export class GeminiPlanner implements IPlanner {
       if (timeout) clearTimeout(timeout);
       console.error("[GeminiPlanner] Failed to generate plan. Falling back to Mock.", error);
       throw error; // Execution core will catch and fallback to MockPlanner
+    }
+  }
+
+  // Phase 2: Deterministic Backend DAG Validation
+  private validateGoalGraph(tasks: any[]) {
+    const taskIds = new Set(tasks.map(t => t.id));
+    
+    // 1. Missing node references
+    for (const task of tasks) {
+      if (task.dependencies) {
+        for (const dep of task.dependencies) {
+          if (!taskIds.has(dep)) {
+            throw new Error(`MISSING_NODE: Task ${task.id} depends on non-existent task ${dep}`);
+          }
+        }
+      }
+    }
+
+    // 2. Cycle detection (Directed Acyclic Graph)
+    const visiting = new Set<string>();
+    const visited = new Set<string>();
+
+    const hasCycle = (taskId: string): boolean => {
+      if (visiting.has(taskId)) return true; // Cycle detected
+      if (visited.has(taskId)) return false;
+
+      visiting.add(taskId);
+      const task = tasks.find(t => t.id === taskId);
+      if (task && task.dependencies) {
+        for (const dep of task.dependencies) {
+          if (hasCycle(dep)) return true;
+        }
+      }
+      visiting.delete(taskId);
+      visited.add(taskId);
+      return false;
+    };
+
+    for (const task of tasks) {
+      if (!visited.has(task.id)) {
+        if (hasCycle(task.id)) {
+          throw new Error(`CIRCULAR_DEPENDENCY: Graph contains a cycle starting at ${task.id}`);
+        }
+      }
     }
   }
 }

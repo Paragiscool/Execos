@@ -23,4 +23,5 @@ export interface Task {
   stateHistory: StateTransition[];
   scheduledStartTime?: string;
   scheduledEndTime?: string;
+  dependencies?: string[]; // IDs of tasks that must be completed before this one
 }

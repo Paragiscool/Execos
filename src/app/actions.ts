@@ -69,15 +69,38 @@ export async function runMissionAction(mode: string, customPrompt?: string): Pro
      });
   }
   
-  // 3. Risk Engine (Deterministic Heuristic)
+  // 3. Risk Engine (Config-Driven Heuristic)
+  const riskConfig = {
+    deadlineWeight: 0.35,
+    scheduleWeight: 0.25,
+    historicalWeight: 0.20,
+    dependencyWeight: 0.10,
+    priorityWeight: 0.10
+  };
+
+  const deadlineProximity = 80;
+  const scheduleLoad = 65;
+  const digitalTwinRisk = defaultContext.digitalTwin.procrastinationRisk; // usually 40
+  const goalDependencies = planTaskCount > 3 ? 60 : 20; 
+  const priority = 90;
+  
+  const riskScore = Math.round(
+     (riskConfig.deadlineWeight * deadlineProximity) + 
+     (riskConfig.scheduleWeight * scheduleLoad) + 
+     (riskConfig.historicalWeight * digitalTwinRisk) + 
+     (riskConfig.dependencyWeight * goalDependencies) + 
+     (riskConfig.priorityWeight * priority)
+  );
+
   ledger.push({
      id: `evt_${Date.now()}_3`,
      eventType: ExecEventType.RiskCalculated,
      timestamp: new Date().toISOString(),
      agent: 'Risk Engine',
-     reason: 'Overload factor: High. Added 1hr buffer to all tasks.',
+     reason: `Calculated Risk Score: ${riskScore}%. Evaluated against Config { Deadline: ${riskConfig.deadlineWeight}, Load: ${riskConfig.scheduleWeight}, Behavior: ${riskConfig.historicalWeight}, Graph: ${riskConfig.dependencyWeight}, Priority: ${riskConfig.priorityWeight} }.`,
      confidence: 88,
-     outcome: 'Risk validated'
+     outcome: 'Risk calculated',
+     payload: { riskScore, riskConfig }
   });
   
   // 4. Policy Engine
@@ -92,14 +115,19 @@ export async function runMissionAction(mode: string, customPrompt?: string): Pro
   });
   
   // 5. Execution Simulation & Reflection
+  const newMetrics = {
+    coding: { averageDelayMins: 130, confidenceScore: 82, sampleCount: 9, learningRate: 0.15 }
+  };
+
   ledger.push({
      id: `evt_${Date.now()}_5`,
      eventType: ExecEventType.ReflectionGenerated,
      timestamp: new Date().toISOString(),
      agent: 'Reflection Engine (Simulation)',
-     reason: 'Consistently underestimated coding tasks by 45 mins. Digital Twin updated.',
+     reason: 'Consistently underestimated coding tasks by 130 mins. Digital Twin updated.',
      confidence: 92,
-     outcome: 'Learning complete'
+     outcome: 'Learning complete',
+     payload: { taskTypeMetrics: newMetrics }
   });
 
   return {
@@ -115,19 +143,42 @@ export async function runMissionAction(mode: string, customPrompt?: string): Pro
 
 function getFinalsWeekMock(): MissionResult {
   const mockTasks = [
-    { id: 't_mock_1', title: 'Review Physics Notes', scheduledStartTime: '14:30', currentState: 'SCHEDULED' },
-    { id: 't_mock_2', title: 'Practice Midterm', scheduledStartTime: '16:00', currentState: 'SCHEDULED' },
-    { id: 't_mock_3', title: 'APM Interview Prep', scheduledStartTime: '19:00', currentState: 'SCHEDULED' }
+    { id: 't_mock_1', title: 'Review Physics Notes', scheduledStartTime: '14:30', currentState: 'SCHEDULED', dependencies: [] },
+    { id: 't_mock_2', title: 'Practice Midterm', scheduledStartTime: '16:00', currentState: 'SCHEDULED', dependencies: ['t_mock_1'] },
+    { id: 't_mock_3', title: 'APM Interview Prep', scheduledStartTime: '19:00', currentState: 'SCHEDULED', dependencies: [] }
   ];
+
+  const deadlineProximity = 90;
+  const scheduleLoad = 85;
+  const digitalTwinRisk = 40;
+  const goalDependencies = 50; 
+  const priority = 100;
+  
+  const riskScore = Math.round(
+     (0.35 * deadlineProximity) + (0.25 * scheduleLoad) + (0.20 * digitalTwinRisk) + (0.10 * goalDependencies) + (0.10 * priority)
+  );
 
   const ledger: LedgerEntry[] = [
     { id: 'evt_1', eventType: ExecEventType.GoalCreated, timestamp: '09:00', agent: 'User', reason: 'Graduate Without Missing Anything', confidence: 100, outcome: 'Goal created' },
     { id: 'evt_2', eventType: ExecEventType.PlanGenerated, timestamp: '09:01', agent: 'Planner', reason: 'Generated 24 tasks for 3 exams and 1 interview', confidence: 94, outcome: 'Plan generated', payload: { tasks: mockTasks } },
-    { id: 'evt_3', eventType: ExecEventType.RiskCalculated, timestamp: '09:02', agent: 'Risk Engine', reason: 'Historical delay 26 mins requires 1hr buffer.', confidence: 94, outcome: 'Risk calculated' },
+    { id: 'evt_3', eventType: ExecEventType.RiskCalculated, timestamp: '09:02', agent: 'Risk Engine', reason: `Calculated Risk Score: ${riskScore}%. Breakdown: 35% Deadline, 25% Load, 20% Behavior, 10% Graph, 10% Priority.`, confidence: 94, outcome: 'Risk calculated', payload: { riskScore } },
     { id: 'evt_4', eventType: ExecEventType.PlanApproved, timestamp: '09:03', agent: 'Policy Engine', reason: 'Validated against burnout and scheduling policies.', confidence: 100, outcome: 'Policy passed' },
     { id: 'evt_5', eventType: ExecEventType.MissedBlock, timestamp: '09:10', agent: 'Execution Core', reason: 'User missed scheduled study block', confidence: 100, outcome: 'Missed block' },
     { id: 'evt_6', eventType: ExecEventType.Replanned, timestamp: '09:10', agent: 'Planner', reason: 'Moved study session to tomorrow morning', confidence: 85, outcome: 'Replanned' },
-    { id: 'evt_7', eventType: ExecEventType.ReflectionGenerated, timestamp: '09:30', agent: 'Reflection Engine (Simulation)', reason: 'You consistently underestimate coding tasks by an average of 55 minutes.', confidence: 92, outcome: 'Digital Twin Updated' }
+    { 
+      id: 'evt_7', 
+      eventType: ExecEventType.ReflectionGenerated, 
+      timestamp: '09:30', 
+      agent: 'Reflection Engine (Simulation)', 
+      reason: 'Coding tasks underestimated by 130 mins. Digital Twin updated with hard metrics.', 
+      confidence: 92, 
+      outcome: 'Digital Twin Updated',
+      payload: { 
+        taskTypeMetrics: {
+          'coding': { averageDelayMins: 130, confidenceScore: 82, sampleCount: 9, learningRate: 0.15 }
+        }
+      }
+    }
   ];
 
   return {

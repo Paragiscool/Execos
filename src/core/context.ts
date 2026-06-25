@@ -13,10 +13,18 @@ export interface UserProfile {
   name: string;
 }
 
+export interface TaskTypeMetrics {
+  averageDelayMins: number;
+  confidenceScore: number;
+  sampleCount: number;
+  learningRate: number;
+}
+
 export interface BehavioralProfile {
   startDelayMins: number;
   maxFocusDurationMins: number;
   procrastinationRisk: number; // 0-100
+  taskTypeMetrics: Record<string, TaskTypeMetrics>;
 }
 
 export interface ExecutionContext {
@@ -44,7 +52,10 @@ export const defaultContext: ExecutionContext = {
   digitalTwin: {
     startDelayMins: 20,
     maxFocusDurationMins: 90,
-    procrastinationRisk: 40
+    procrastinationRisk: 40,
+    taskTypeMetrics: {
+      'coding': { averageDelayMins: 45, confidenceScore: 60, sampleCount: 8, learningRate: 0.1 }
+    }
   },
   worldState: {
     currentTime: new Date().toISOString(),
@@ -66,7 +77,10 @@ export const globalContext: ExecutionContext = {
   digitalTwin: {
     startDelayMins: 20,
     maxFocusDurationMins: 90,
-    procrastinationRisk: 40
+    procrastinationRisk: 40,
+    taskTypeMetrics: {
+      'coding': { averageDelayMins: 45, confidenceScore: 60, sampleCount: 8, learningRate: 0.1 }
+    }
   },
   worldState: {
     currentTime: new Date().toISOString(),

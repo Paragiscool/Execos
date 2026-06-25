@@ -21,7 +21,10 @@ export class ReplayEngine {
       goals: new Map(ctx.goals),
       tasks: new Map(ctx.tasks),
       calendar: [...ctx.calendar],
-      digitalTwin: { ...ctx.digitalTwin },
+      digitalTwin: { 
+        ...ctx.digitalTwin, 
+        taskTypeMetrics: ctx.digitalTwin.taskTypeMetrics ? JSON.parse(JSON.stringify(ctx.digitalTwin.taskTypeMetrics)) : undefined
+      },
       worldState: { ...ctx.worldState },
       ledger: [...ctx.ledger],
       worldLog: [...ctx.worldLog]
@@ -91,6 +94,12 @@ export class ReplayEngine {
       case ExecEventType.ReflectionGenerated:
         // Digital twin learning applied
         this.reconstructedContext.worldLog.push(`Reflection: ${entry.reason}`);
+        if (entry.payload?.taskTypeMetrics) {
+          this.reconstructedContext.digitalTwin.taskTypeMetrics = {
+             ...this.reconstructedContext.digitalTwin.taskTypeMetrics,
+             ...entry.payload.taskTypeMetrics
+          };
+        }
         // Maintain the final readiness
         if (this.reconstructedContext.readinessScore < 91) {
           this.reconstructedContext.readinessScore = 91;
