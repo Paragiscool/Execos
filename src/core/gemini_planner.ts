@@ -34,7 +34,70 @@ const plannerSchema: Schema = {
   required: ["goalId", "tasks"]
 };
 
+const strategiesSchema: Schema = {
+  type: Type.ARRAY,
+  items: {
+    type: Type.OBJECT,
+    properties: {
+      id: { type: Type.STRING },
+      name: { type: Type.STRING },
+      description: { type: Type.STRING },
+      focusAreas: { type: Type.ARRAY, items: { type: Type.STRING } },
+      tasks: {
+        type: Type.ARRAY,
+        items: {
+          type: Type.OBJECT,
+          properties: {
+            id: { type: Type.STRING },
+            title: { type: Type.STRING },
+            estimatedDurationMins: { type: Type.INTEGER },
+            priority: { type: Type.INTEGER },
+            dependencies: { type: Type.ARRAY, items: { type: Type.STRING } }
+          },
+          required: ["id", "title", "estimatedDurationMins", "priority"]
+        }
+      }
+    },
+    required: ["id", "name", "description", "focusAreas", "tasks"]
+  }
+};
+
 export class GeminiPlanner implements IPlanner {
+  async generateStrategies(request: PlanGenerationRequest): Promise<any[]> {
+    console.log(`[GeminiPlanner] Generating strategies for Goal: ${request.goalId}`);
+    
+    // Demo Safe Mode
+    if (process.env.NEXT_PUBLIC_DEMO_SAFE_MODE === 'true') {
+       throw new Error("DEMO_SAFE_MODE_ACTIVE");
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000); // 4s timeout for strategy gen
+
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: `Input: ${request.rawInput}\nGoal ID: ${request.goalId}\n\nGenerate exactly 3 distinct execution strategies: 1) Aggressive (fast, high priority first), 2) Balanced (even pacing), 3) Conservative (padded durations, safe).`,
+        config: {
+          systemInstruction: "You are EXECOS Strategy Engine. You generate distinct high-level strategies for completing a goal. You DO NOT compute success probabilities. You only define the tasks and their parameters. Return a JSON array of 3 strategies.",
+          responseMimeType: 'application/json',
+          responseSchema: strategiesSchema,
+          abortSignal: controller.signal,
+        }
+      });
+      clearTimeout(timeout);
+      
+      const strategies = JSON.parse(response.text || "[]");
+      if (!Array.isArray(strategies) || strategies.length !== 3) {
+        throw new Error("MALFORMED_STRATEGIES");
+      }
+      return strategies;
+    } catch (e) {
+      if (timeout) clearTimeout(timeout);
+      throw e;
+    }
+  }
+
   async generatePlan(request: PlanGenerationRequest): Promise<GeneratedPlan> {
     console.log(`[GeminiPlanner] Generating plan via Gemini for Goal: ${request.goalId}`);
     const startTime = Date.now();

@@ -28,8 +28,14 @@ export default function ArchitectureDebugPanel() {
     <>
     <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 p-4 text-xs font-mono text-green-400 z-50 flex justify-between items-center">
       <div className="flex gap-6 items-center flex-wrap">
-        <div className="text-gray-500 text-[10px] leading-tight pr-4 border-r border-gray-700 hidden sm:block">
-          EXECOS v1.0.0 • Build 4f82ac9 • Planner v3 • Risk v2 • <span className="text-blue-400">DEMO MODE ON</span>
+        <div className="text-gray-500 text-[10px] leading-tight pr-4 border-r border-gray-700 hidden sm:block space-y-1">
+          <div>EXECOS v1.0.0 • Build 4f82ac9 • <span className="text-blue-400 font-bold">DEMO MODE ON</span></div>
+          <div className="text-gray-600 flex gap-3 font-semibold">
+            <span>Planner Prompt: v4</span>
+            <span>Risk Model: v2</span>
+            <span>Decision Simulator: v1</span>
+            <span>Replay Engine: v3</span>
+          </div>
         </div>
         <div><span className="text-gray-400">Goal Graph:</span> {systemState.goalGraph}</div>
         <div><span className="text-gray-400">Planner:</span> {systemState.planner}</div>

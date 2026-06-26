@@ -75,7 +75,13 @@ export function MissionProvider({ children }: { children: React.ReactNode }) {
       const nextCtx = engine.nextEvent();
       if (nextCtx) {
         setCurrentContext(nextCtx);
-        setCurrentIndex(engine.getCurrentIndex());
+        const idx = engine.getCurrentIndex();
+        setCurrentIndex(idx);
+        
+        // Auto-pause for Decision Simulator cinematic flow
+        if (engine.ledger[idx].eventType === 'StrategiesEvaluated') {
+           setIsPlaying(false);
+        }
       } else {
         setIsPlaying(false);
       }

@@ -25,3 +25,24 @@ export interface Task {
   scheduledEndTime?: string;
   dependencies?: string[]; // IDs of tasks that must be completed before this one
 }
+
+export interface Strategy {
+  id: string;
+  name: string; // e.g., 'Aggressive', 'Balanced', 'Conservative'
+  description: string;
+  focusAreas: string[];
+  tasks: Task[]; // The proposed schedule for this strategy
+}
+
+export interface StrategyEvaluation {
+  strategyId: string;
+  utilityScore: number; // 0.0 to 1.0
+  metrics: {
+    completionProbability: number;
+    stressLevel: number;
+    riskLevel: number;
+    opportunityCost: number;
+    timeDebt: number;
+  };
+  rejectionReason?: string; // If not selected, why?
+}

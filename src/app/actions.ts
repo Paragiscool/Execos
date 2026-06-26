@@ -32,42 +32,109 @@ export async function runMissionAction(mode: string, customPrompt?: string): Pro
     outcome: 'Goal graph initialized'
   });
   
-  // 2. Planner (Real Gemini Call)
+  // 2. Strategy Generation (Real Gemini Call)
   const planner = new GeminiPlanner();
-  let planTaskCount = 3; // fallback default
+  let strategies: any[] = [];
   try {
-     const plan = await planner.generatePlan({
+     strategies = await planner.generateStrategies({
        goalId: 'g_custom',
        rawInput: customPrompt || "Plan my week"
      });
-     planTaskCount = plan.tasks?.length || 3;
-     
      ledger.push({
-       id: `evt_${Date.now()}_2`,
-       eventType: ExecEventType.PlanGenerated,
+       id: `evt_${Date.now()}_2a`,
+       eventType: ExecEventType.StrategiesGenerated,
        timestamp: new Date().toISOString(),
        agent: 'Planner',
-       reason: `Generated ${planTaskCount} tasks via Gemini`,
+       reason: `Generated ${strategies.length} distinct execution strategies via Gemini`,
        confidence: 95,
-       outcome: 'Plan generated',
-       payload: { tasks: plan.tasks }
+       outcome: 'Strategies generated',
+       payload: { strategies }
      });
   } catch(e) {
+     const mockPlanner = new (require('../core/planner_interface').MockPlanner)();
+     strategies = await mockPlanner.generateStrategies({
+       goalId: 'g_custom',
+       rawInput: customPrompt || "Plan my week"
+     });
      ledger.push({
-       id: `evt_${Date.now()}_err`,
-       eventType: ExecEventType.PlanGenerated,
+       id: `evt_${Date.now()}_err_strat`,
+       eventType: ExecEventType.StrategiesGenerated,
        timestamp: new Date().toISOString(),
        agent: 'MockPlanner',
-       reason: `Gemini failed or Demo Safe Mode active. Using fallback plan.`,
+       reason: `Gemini failed or Demo Safe Mode active. Using fallback strategies.`,
        confidence: 50,
-       outcome: 'Fallback plan generated',
-       payload: { 
-         tasks: [
-           { id: 't_custom_1', title: 'Start ' + (customPrompt || 'Task'), currentState: 'WAITING_FOR_PREREQ' }
-         ] 
-       }
+       outcome: 'Fallback strategies generated',
+       payload: { strategies }
      });
   }
+
+  // 3. Strategy Evaluation (Deterministic Utility Scoring)
+  const evaluations = strategies.map(strat => {
+    // Deterministic mock scoring based on strategy name for demonstration
+    let completion = 0.5, stress = 0.5, risk = 0.5, opportunity = 0.5, timeDebt = 0.5;
+    let reason = "Selected as optimal path";
+    
+    if (strat.name.toLowerCase().includes('aggressive') || strat.name.toLowerCase().includes('strat_1')) {
+      completion = 0.84; stress = 0.90; risk = 0.60; timeDebt = 0.80; opportunity = 0.20;
+      reason = "Rejected: High burnout risk and high time debt.";
+    } else if (strat.name.toLowerCase().includes('balanced') || strat.name.toLowerCase().includes('strat_2')) {
+      completion = 0.91; stress = 0.30; risk = 0.20; timeDebt = 0.40; opportunity = 0.80;
+    } else {
+      completion = 0.73; stress = 0.10; risk = 0.10; timeDebt = 0.20; opportunity = 0.90;
+      reason = "Rejected: Completion probability too low for deadline.";
+    }
+
+    // Utility = (Completion * 0.5) + (Opportunity * 0.2) - (Stress * 0.15) - (Risk * 0.15)
+    const utilityScore = Number(((completion * 0.5) + (opportunity * 0.2) - (stress * 0.15) - (risk * 0.15)).toFixed(2));
+
+    return {
+      strategyId: strat.id,
+      name: strat.name,
+      utilityScore,
+      metrics: { completionProbability: completion, stressLevel: stress, riskLevel: risk, opportunityCost: opportunity, timeDebt },
+      rejectionReason: reason
+    };
+  });
+
+  ledger.push({
+    id: `evt_${Date.now()}_2b`,
+    eventType: ExecEventType.StrategiesEvaluated,
+    timestamp: new Date().toISOString(),
+    agent: 'Risk Engine',
+    reason: `Evaluated ${evaluations.length} strategies for Expected Utility`,
+    confidence: 100,
+    outcome: 'Strategies evaluated',
+    payload: { evaluations }
+  });
+
+  // Select Winner
+  const winnerEval = evaluations.reduce((prev, current) => (prev.utilityScore > current.utilityScore) ? prev : current);
+  const winningStrategy = strategies.find(s => s.id === winnerEval.strategyId);
+  winnerEval.rejectionReason = undefined; // clear rejection reason for winner
+
+  ledger.push({
+    id: `evt_${Date.now()}_2c`,
+    eventType: ExecEventType.StrategySelected,
+    timestamp: new Date().toISOString(),
+    agent: 'Execution Core',
+    reason: `Selected '${winnerEval.name}' with Utility ${winnerEval.utilityScore}`,
+    confidence: 100,
+    outcome: 'Strategy selected',
+    payload: { strategy: winningStrategy, evaluation: winnerEval }
+  });
+
+  // Finalize Plan
+  const planTaskCount = winningStrategy?.tasks?.length || 3;
+  ledger.push({
+    id: `evt_${Date.now()}_2d`,
+    eventType: ExecEventType.PlanGenerated,
+    timestamp: new Date().toISOString(),
+    agent: 'Execution Core',
+    reason: `Finalized execution plan from winning strategy`,
+    confidence: 100,
+    outcome: 'Plan generated',
+    payload: { tasks: winningStrategy?.tasks || [] }
+  });
   
   // 3. Risk Engine (Config-Driven Heuristic)
   const riskConfig = {

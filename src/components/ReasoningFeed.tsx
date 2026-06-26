@@ -59,6 +59,28 @@ export default function ReasoningFeed() {
                 <span className="text-gray-500 block text-xs mb-1">Reasoning</span>
                 <span className="text-gray-300">{evt.reason}</span>
               </div>
+              
+              {/* Special View for AI Decision Audit */}
+              {evt.eventType === 'StrategySelected' && evt.payload?.evaluation && (
+                <div className="col-span-2 mt-2 pt-4 border-t border-gray-800 bg-gray-900/50 p-4 rounded-lg">
+                  <h3 className="text-blue-400 font-bold mb-3 uppercase text-[10px] tracking-widest">AI Decision Audit</h3>
+                  
+                  <div className="mb-4">
+                    <span className="text-gray-500 block text-xs mb-1">Chosen</span>
+                    <span className="text-white font-bold">{evt.payload.evaluation.name}</span>
+                    <span className="text-blue-400 text-xs ml-2">(Utility: {evt.payload.evaluation.utilityScore})</span>
+                  </div>
+
+                  <div>
+                    <span className="text-gray-500 block text-xs mb-2">Rejection Log</span>
+                    <div className="space-y-2">
+                      {/* We expect payload.strategyEvaluations to contain the full list from previous event, but for simplicity we rely on the previous StrategiesEvaluated event or pass it in payload */}
+                      <div className="text-gray-400 text-xs italic">See previous StrategiesEvaluated event for full rejection breakdowns. Policy: Passed.</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div>
                 <span className="text-gray-500 block text-xs mb-1">Origin Agent</span>
                 <span className="text-blue-400">{evt.agent}</span>

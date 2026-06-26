@@ -6,6 +6,9 @@ import { ExecutionState } from './execution_state';
 export enum ExecEventType {
   GoalCreated = 'GoalCreated',
   PlanningRequested = 'PlanningRequested',
+  StrategiesGenerated = 'StrategiesGenerated',
+  StrategiesEvaluated = 'StrategiesEvaluated',
+  StrategySelected = 'StrategySelected',
   PlanGenerated = 'PlanGenerated',
   RiskCalculated = 'RiskCalculated',
   PlanApproved = 'PlanApproved',

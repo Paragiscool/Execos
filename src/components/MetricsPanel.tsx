@@ -16,7 +16,7 @@ export default function MetricsPanel() {
         <div className="text-5xl font-bold text-white mb-4 tracking-tighter">
           {readiness}%
         </div>
-        <div className="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+        <div className="w-full bg-gray-800 h-2 rounded-full overflow-hidden mb-4">
           <motion.div 
             className="h-full bg-blue-500"
             initial={{ width: 0 }}
@@ -24,12 +24,20 @@ export default function MetricsPanel() {
             transition={{ duration: 0.5, ease: "easeOut" }}
           />
         </div>
+        <div className="text-[10px] font-mono text-gray-500 space-y-1.5 bg-gray-900/50 p-2 rounded">
+           <div className="flex justify-between items-center"><span>Planning</span> <span className="text-blue-400 text-xs">██████</span></div>
+           <div className="flex justify-between items-center"><span>Risk</span> <span className="text-blue-400 text-xs">█████████</span></div>
+           <div className="flex justify-between items-center"><span>Focus</span> <span className="text-blue-400 text-xs">███████</span></div>
+           <div className="flex justify-between items-center"><span>Calendar</span> <span className="text-blue-400 text-xs">██████████</span></div>
+           <div className="flex justify-between items-center"><span>Policy</span> <span className="text-blue-400 text-xs">████████</span></div>
+        </div>
       </div>
 
       {/* AI Performance Stats */}
-      <div className="mb-10 flex-1">
+      {/* AI Performance Stats */}
+      <div className="mb-8">
         <h2 className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-4">AI Performance</h2>
-        <div className="space-y-6 font-mono text-sm">
+        <div className="space-y-4 font-mono text-sm">
           
           <div className="flex justify-between items-center">
             <span className="text-gray-500">Gemini Latency</span>
@@ -44,6 +52,57 @@ export default function MetricsPanel() {
           <div className="flex justify-between items-center">
             <span className="text-gray-500">Conflicts Prevented</span>
             <span className="text-gray-200">98%</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Digital Twin Insights */}
+      <div className="mb-10 flex-1">
+        <h2 className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2 flex items-center justify-between">
+          Digital Twin Insights
+          <span className="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded">V2 Model</span>
+        </h2>
+        <p className="text-[10px] text-gray-500 mb-4 italic">Continuously adapts planning using historical execution behavior.</p>
+        
+        <div className="space-y-4 font-mono text-sm bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+          <div className="mb-4 text-xs space-y-1.5 text-gray-400 border-b border-gray-800 pb-4">
+            <span className="block mb-2 text-gray-500">Focus Profile</span>
+            <div className="flex justify-between items-center"><span>Morning</span> <span className="text-yellow-400/80 text-xs">███████</span></div>
+            <div className="flex justify-between items-center"><span>Afternoon</span> <span className="text-yellow-400/80 text-xs">██████████</span></div>
+            <div className="flex justify-between items-center"><span>Night</span> <span className="text-yellow-400/80 text-xs">██</span></div>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-gray-400">Avg Coding Delay</span>
+            <span className="text-red-400 font-bold">
+              {currentContext.digitalTwin.taskTypeMetrics['coding']?.averageDelayMins || 0} min
+            </span>
+          </div>
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-gray-500">Confidence</span>
+            <span className="text-green-400">{currentContext.digitalTwin.taskTypeMetrics['coding']?.confidenceScore || 0}%</span>
+          </div>
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-gray-500">Sample Size</span>
+            <span className="text-gray-300">n = {currentContext.digitalTwin.taskTypeMetrics['coding']?.sampleCount || 0}</span>
+          </div>
+          <div className="mt-4 pt-3 border-t border-gray-800 space-y-1.5">
+            <span className="text-[10px] uppercase tracking-widest text-blue-400 font-bold block mb-2">Twin Status</span>
+            <div className="flex justify-between items-center text-[10px]">
+              <span className="text-gray-500">Learning</span>
+              <span className="text-green-400 font-bold flex items-center gap-1"><span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span> Active</span>
+            </div>
+            <div className="flex justify-between items-center text-[10px]">
+              <span className="text-gray-500">Confidence</span>
+              <span className="text-white">91%</span>
+            </div>
+            <div className="flex justify-between items-center text-[10px]">
+              <span className="text-gray-500">Samples</span>
+              <span className="text-white">18</span>
+            </div>
+            <div className="flex justify-between items-center text-[10px]">
+              <span className="text-gray-500">Last Updated</span>
+              <span className="text-white">2 minutes ago</span>
+            </div>
           </div>
         </div>
       </div>

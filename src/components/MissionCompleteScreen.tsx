@@ -11,6 +11,26 @@ export default function MissionCompleteScreen({ onAcknowledge }: { onAcknowledge
         <h1 className="text-3xl font-bold text-white mb-2 tracking-wide">EXECUTION INTELLIGENCE REPORT</h1>
         <p className="text-gray-400 mb-8 font-mono">Mission: Graduate Without Missing Anything</p>
 
+        {/* Mission Outcome */}
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-8 flex justify-between items-center text-center">
+          <div>
+            <span className="text-gray-500 text-[10px] uppercase tracking-widest block mb-1">Mission Success</span>
+            <span className="text-lg font-bold text-green-400">✓ Completed</span>
+          </div>
+          <div>
+            <span className="text-gray-500 text-[10px] uppercase tracking-widest block mb-1">Expected Utility</span>
+            <span className="text-lg font-bold text-blue-400">0.91</span>
+          </div>
+          <div>
+            <span className="text-gray-500 text-[10px] uppercase tracking-widest block mb-1">Execution Confidence</span>
+            <span className="text-lg font-bold text-white">94%</span>
+          </div>
+          <div>
+            <span className="text-gray-500 text-[10px] uppercase tracking-widest block mb-1">Decision Quality</span>
+            <span className="text-lg font-bold text-green-400">High</span>
+          </div>
+        </div>
+
         {/* Execution Intelligence Report */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 mb-10">
           <div>

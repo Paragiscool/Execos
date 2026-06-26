@@ -58,7 +58,28 @@ export default function Timeline() {
                 <span className="font-bold text-white text-sm">{task.title}</span>
                 <time className="font-mono text-xs text-blue-400">{task.scheduledStartTime || '--:--'}</time>
               </div>
-              <p className="text-xs text-gray-500 mt-1">Status: {task.currentState}</p>
+              <p className="text-[10px] uppercase tracking-wider text-gray-500 mt-1">
+                Status: <span className={task.currentState === 'COMPLETED' ? 'text-green-400 font-bold' : 'text-gray-300'}>{task.currentState}</span>
+              </p>
+              
+              <div className="mt-3 pt-2 border-t border-gray-800 text-[10px] font-mono space-y-1">
+                <div className="mb-2">
+                  <span className="text-gray-600 block mb-1">Decision Source</span>
+                  <div className="flex items-center text-gray-400 gap-1 overflow-x-auto whitespace-nowrap pb-1 scrollbar-hide">
+                    <span>Planner</span>
+                    <span className="text-gray-600">→</span>
+                    <span>Risk Engine</span>
+                    <span className="text-gray-600">→</span>
+                    <span>Policy</span>
+                    <span className="text-gray-600">→</span>
+                    <span className="text-blue-400">Scheduled</span>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center pt-1 border-t border-gray-800/50">
+                  <span className="text-gray-600">Expected Utility</span>
+                  <span className="text-blue-400 font-bold">0.83</span>
+                </div>
+              </div>
             </div>
           </div>
         ))}

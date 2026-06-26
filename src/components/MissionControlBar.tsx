@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import Link from 'next/link';
 import { useMission } from './MissionProvider';
 
 export default function MissionControlBar() {
@@ -59,6 +60,12 @@ export default function MissionControlBar() {
       )}
 
       <div className="flex gap-4">
+        <Link 
+          href="/benchmarks"
+          className="border border-gray-700 text-gray-400 px-4 py-2 rounded font-bold uppercase tracking-wide hover:bg-gray-800 transition-colors flex items-center"
+        >
+          Benchmarks
+        </Link>
         <button 
           onClick={() => runMission()}
           className="bg-white text-black px-6 py-2 rounded font-bold uppercase tracking-wide hover:bg-blue-100 transition-colors"
